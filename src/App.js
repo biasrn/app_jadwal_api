@@ -11,7 +11,7 @@ function App() {
 
   return (
     <JadwalGlobal>
-      <h1>Website Penjadwalan Pertemuan 5</h1>
+      <h1>Website Penjadwalan Pertemuan 5 dengan API</h1>
       <TambahJadwal />
       <DaftarJadwal />
     </JadwalGlobal>
