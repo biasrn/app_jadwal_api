@@ -5,37 +5,51 @@ const JadwalContext = createContext();
 export const JadwalGlobal = ({ children }) => {
   const [jadwal, setJadwal] = useState([]);
 
-  // Lifecycle: Memuat daftar tugas dari localStorage saat aplikasi pertama kali dijalankan (Mounting)
+  // Mengambil jadwal dari API saat aplikasi pertama kali dimuat
   useEffect(() => {
-    const simpanJadwal = JSON.parse(localStorage.getItem("jadwal"));
-    if (simpanJadwal) {
-      setJadwal(simpanJadwal);
-    }
+    fetch("http://localhost:5000/api/jadwal")
+      .then((response) => response.json())
+      .then((data) => setJadwal(data))
+      .catch((error) => console.error("Error fetching jadwal:", error));
   }, []);
 
-  // Lifecycle: Menyimpan daftar tugas ke localStorage setiap kali todos berubah (Updating)
-  useEffect(() => {
-    localStorage.setItem("jadwal", JSON.stringify(jadwal));
-  }, [jadwal]);
-
+  // Menambahkan jadwal baru
   const tambahJadwal = (tugas) => {
     if (!tugas || typeof tugas !== "string") return;
-    console.log("Menambahkan tugas:", tugas); // Debugging
-    setJadwal([...jadwal, { id: Date.now(), tugas: tugas.trim() }]);
+
+    fetch("http://localhost:5000/api/jadwal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tugas }),
+    })
+      .then((response) => response.json())
+      .then((newJadwal) => setJadwal((prevJadwal) => [...prevJadwal, newJadwal]))
+      .catch((error) => console.error("Error adding jadwal:", error));
   };
 
+  // Menghapus jadwal
   const hapusJadwal = (id) => {
-    setJadwal(jadwal.filter((jdwl) => jdwl.id !== id));
+    fetch(`http://localhost:5000/api/jadwal/${id}`, { method: "DELETE" })
+      .then(() => setJadwal((prevJadwal) => prevJadwal.filter((jdwl) => jdwl.id !== id)))
+      .catch((error) => console.error("Error deleting jadwal:", error));
   };
 
-  // Memperbaiki fungsi editJadwal agar dapat mengedit tugas
+  // Mengedit jadwal
   const editJadwal = (id, tugasBaru) => {
     if (!tugasBaru || typeof tugasBaru !== "string") return;
-    setJadwal(
-      jadwal.map((jdwl) =>
-        jdwl.id === id ? { ...jdwl, tugas: tugasBaru.trim() } : jdwl
-      )
-    );
+
+    fetch(`http://localhost:5000/api/jadwal/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tugas: tugasBaru }),
+    })
+      .then((response) => response.json())
+      .then((updatedJadwal) => {
+        setJadwal((prevJadwal) =>
+          prevJadwal.map((jdwl) => (jdwl.id === id ? updatedJadwal : jdwl))
+        );
+      })
+      .catch((error) => console.error("Error editing jadwal:", error));
   };
 
   return (
